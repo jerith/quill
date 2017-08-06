@@ -58,6 +58,10 @@ class TestStringParser(BaseTest):
         assert self.parse(r'"\v"') == '\v'
         assert self.parse(r'"\0"') == '\0'
 
+    def test_unrecognised_escapes(self):
+        assert self.parse(r'"\q"') == '\\q'
+        assert self.parse(r'"\1"') == '\\1'
+
     def test_hex_escapes(self):
         assert self.parse(r'"\x20"') == ' '
         assert self.parse(r'"\xff"') == '\xc3\xbf'

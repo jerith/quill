@@ -87,6 +87,7 @@ STRING_RULES = [
     ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
     ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
     ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
+    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\]'),
     ('CHAR', r'[^"\\]'),
     ('CLOSING_QUOTE', r'"'),
 ]
@@ -197,7 +198,7 @@ class QuillLexerStream(SRLexerStream):
             elif t.name == 'ESC_HEX_ANY':
                 parts.append(hex_to_utf8(t.value[3:-1]))
             else:
-                assert t.name == 'CHAR'
+                assert t.name in ['ESC_UNRECOGNISED', 'CHAR']
                 parts.append(t.value)
         else:
             raise self.parse_error("unterminated string")
