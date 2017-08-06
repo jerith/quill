@@ -86,7 +86,7 @@ STRING_RULES = [
     ('ESC_SIMPLE', r'\\[abfnrtv0]'),
     ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
     ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
-    ('ESC_HEX_32', r'\\U[0-9a-fA-F]{8}'),
+    ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
     ('CHAR', r'[^"\\]'),
     ('CLOSING_QUOTE', r'"'),
 ]
@@ -192,8 +192,10 @@ class QuillLexerStream(SRLexerStream):
                     'v': '\v',
                     '0': '\0',
                 }[t.value[1]])
-            elif t.name in ['ESC_HEX_8', 'ESC_HEX_16', 'ESC_HEX_32']:
+            elif t.name in ['ESC_HEX_8', 'ESC_HEX_16']:
                 parts.append(hex_to_utf8(t.value[2:]))
+            elif t.name == 'ESC_HEX_ANY':
+                parts.append(hex_to_utf8(t.value[3:-1]))
             else:
                 assert t.name == 'CHAR'
                 parts.append(t.value)
