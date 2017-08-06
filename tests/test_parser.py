@@ -46,6 +46,33 @@ class TestStringParser(BaseTest):
         assert self.parse(r'"\\\""') == '\\"'
         assert self.parse(r'"\\\"\\"') == '\\"\\'
 
+    def test_simple_escapes(self):
+        assert self.parse(r'"\a"') == '\a'
+        assert self.parse(r'"\b"') == '\b'
+        assert self.parse(r'"\f"') == '\f'
+        assert self.parse(r'"\n"') == '\n'
+        assert self.parse(r'"\r"') == '\r'
+        assert self.parse(r'"\t"') == '\t'
+        assert self.parse(r'"\v"') == '\v'
+        assert self.parse(r'"\0"') == '\0'
+
+    def test_hex_escapes(self):
+        assert self.parse(r'"\x20"') == ' '
+        assert self.parse(r'"\xff"') == '\xc3\xbf'
+        assert self.parse(r'"\u0020"') == ' '
+        assert self.parse(r'"\u1020"') == '\xe1\x80\xa0'
+        assert self.parse(r'"\uffff"') == '\xef\xbf\xbf'
+        assert self.parse(r'"\U00000020"') == ' '
+        assert self.parse(r'"\U00010000"') == '\xf0\x90\x80\x80'
+        assert self.parse(r'"\U00102030"') == '\xf4\x82\x80\xb0'
+        assert self.parse(r'"\U0010ffff"') == '\xf4\x8f\xbf\xbf'
+
+    def test_bad_hex_excapes(self):
+        self.parse_bad(r'"\xf"')
+        self.parse_bad(r'"\xfq"')
+        self.parse_bad(r'"\u000q"')
+        self.parse_bad(r'"\U0000000q"')
+
     def test_bad_utf8(self):
         self.parse_bad('"\xff"')
         self.parse_bad('"\xc0q"')
