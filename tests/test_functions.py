@@ -1,8 +1,21 @@
-import py
+from nolang.error import AppError
+
 from support import BaseTest
 
 
 class TestFunctions(BaseTest):
+    def assert_argerror(self, code, msg=None):
+        try:
+            self.interpret(code)
+        except AppError as e:
+            if e.match(self.space, self.space.w_argerror):
+                if msg is not None:
+                    assert e.w_exception.message == msg
+            else:
+                raise
+        else:
+            raise Exception("did not raise")
+
     def test_simple_function(self):
         w_res = self.interpret('''
             def foo() {
@@ -28,7 +41,6 @@ class TestFunctions(BaseTest):
         assert self.space.int_w(w_res) == 13
 
     def test_named_args(self):
-        py.test.skip("implement named args properly")
         w_res = self.interpret('''
             def foo(a, b) {
                 return a * 10 + b
@@ -51,8 +63,58 @@ class TestFunctions(BaseTest):
         ''')
         assert self.space.int_w(w_res) == 23
 
+    def test_too_few_args(self):
+        self.assert_argerror('''
+            def foo(a, b) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(1)
+            }
+        ''', "Function foo got 1 arguments, expected 2")
+
+    def test_too_many_args(self):
+        self.assert_argerror('''
+            def foo(a, b) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(1, 2, 3)
+            }
+        ''', "Function foo got 3 arguments, expected 2")
+        self.assert_argerror('''
+            def foo(a, b) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(1, b=2, c=3)
+            }
+        ''', "Function foo got 3 arguments, expected 2")
+
+    def test_duplicate_args(self):
+        self.assert_argerror('''
+            def foo(a, b) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(1, a=2)
+            }
+        ''', "Function foo got multiple values for argument 'a'")
+        self.assert_argerror('''
+            def foo(a, b) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(b=1, b=2)
+            }
+        ''', "Function foo got multiple values for argument 'b'")
+
     def test_named_args_illegal(self):
-        py.test.skip("implement named args properly")
         self.assert_parse_error('''
             def foo(a, b) {
                 return a + b

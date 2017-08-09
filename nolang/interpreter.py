@@ -180,7 +180,7 @@ class Interpreter(object):
             args[i] = frame.pop()
         named_args = [(None, None)] * num_named
         for i in range(num_named - 1, -1, -1):
-            named_args[i] = (frame.pop(), frame.pop())
+            named_args[i] = (space.utf8_w(frame.pop()), frame.pop())
         w_callable = frame.pop()
         frame.push(space.call(w_callable, args, named_args))
 

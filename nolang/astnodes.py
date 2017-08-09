@@ -587,10 +587,10 @@ class Call(AstNode):
 
     def compile(self, state):
         self.left_hand.compile(state)
-        for arg in self.arglist:
-            arg.compile(state)
         for named_arg in self.named_args:
             named_arg.compile(state)
+        for arg in self.arglist:
+            arg.compile(state)
         state.emit(self.left_hand.getendidx(), opcodes.CALL, len(self.arglist), len(self.named_args))
 
 
