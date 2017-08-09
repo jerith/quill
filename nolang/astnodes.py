@@ -554,17 +554,44 @@ class Assignment(AstNode):
         state.emit(self.expr.getstartidx(), opcodes.STORE, varno)
 
 
+class NamedArg(AstNode):
+    def __init__(self, argname, expr, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.argname = argname
+        self.expr = expr
+
+    def compile(self, state):
+        self.expr.compile(state)
+        no = state.add_str_constant(self.argname)
+        state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
+
+
+class ArgListPartial(AstNode):
+    def __init__(self, args, named_args):
+        self.args = args
+        self.named_args = named_args
+
+    def get_arg_list(self):
+        return self.args
+
+    def get_named_arg_list(self):
+        return self.named_args
+
+
 class Call(AstNode):
-    def __init__(self, expr, arglist, srcpos=None):
+    def __init__(self, expr, arglist, named_args, srcpos=None):
         AstNode.__init__(self, srcpos)
         self.left_hand = expr
         self.arglist = arglist
+        self.named_args = named_args
 
     def compile(self, state):
         self.left_hand.compile(state)
         for arg in self.arglist:
             arg.compile(state)
-        state.emit(self.left_hand.getendidx(), opcodes.CALL, len(self.arglist))
+        for named_arg in self.named_args:
+            named_arg.compile(state)
+        state.emit(self.left_hand.getendidx(), opcodes.CALL, len(self.arglist), len(self.named_args))
 
 
 class Return(AstNode):

@@ -374,10 +374,9 @@ def get_parser():
     def atom_false(state, p):
         return ast.FalseNode(srcpos=sr(p))
 
-    @pg.production('atom : atom LEFT_PAREN expression_list '
-                   'RIGHT_PAREN')
+    @pg.production('atom : atom LEFT_PAREN arg_list RIGHT_PAREN')
     def atom_call(state, p):
-        return ast.Call(p[0], p[2].get_element_list(), srcpos=sr(p))
+        return ast.Call(p[0], p[2].get_arg_list(), p[2].get_named_arg_list(), srcpos=sr(p))
 
     @pg.production('atom : LEFT_PAREN expression RIGHT_PAREN')
     def atom_paren_expression_paren(state, p):
@@ -429,6 +428,44 @@ def get_parser():
     @pg.production('expression_sublist : COMMA expression expression_sublist')
     def expression_sublist_expression(state, p):
         return ast.ExpressionListPartial([p[1]] + p[2].get_element_list())
+
+    @pg.production('named_arg : IDENTIFIER ASSIGN expression')
+    def named_arg(state, p):
+        return ast.NamedArg(p[0].getstr(), p[2], srcpos=sr(p))
+
+    @pg.production('arg_list : ')
+    def arg_list_empty(state, p):
+        return ast.ArgListPartial([], [])
+
+    @pg.production('arg_list : expression arg_sublist')
+    def arg_list_expression(state, p):
+        return ast.ArgListPartial([p[0]] + p[1].get_arg_list(), p[1].get_named_arg_list())
+
+    @pg.production('arg_list : named_arg named_arg_sublist')
+    def arg_list_named_arg(state, p):
+        return ast.ArgListPartial(p[1].get_arg_list(), [p[0]] + p[1].get_named_arg_list())
+
+    @pg.production('arg_sublist : ')
+    @pg.production('arg_sublist : COMMA')
+    def arg_sublist_empty(state, p):
+        return ast.ArgListPartial([], [])
+
+    @pg.production('arg_sublist : COMMA expression arg_sublist')
+    def arg_sublist_expression(state, p):
+        return ast.ArgListPartial([p[1]] + p[2].get_arg_list(), p[2].get_named_arg_list())
+
+    @pg.production('arg_sublist : COMMA named_arg named_arg_sublist')
+    def arg_sublist_named_args(state, p):
+        return ast.ArgListPartial(p[2].get_arg_list(), [p[1]] + p[2].get_named_arg_list())
+
+    @pg.production('named_arg_sublist : ')
+    @pg.production('named_arg_sublist : COMMA')
+    def named_arg_sublist_empty(state, p):
+        return ast.ArgListPartial([], [])
+
+    @pg.production('named_arg_sublist : COMMA named_arg named_arg_sublist')
+    def named_arg_sublist_expression(state, p):
+        return ast.ArgListPartial(p[2].get_arg_list(), [p[1]] + p[2].get_named_arg_list())
 
     @pg.production('dict_pair_list : ')
     def dict_pair_list_empty(state, p):

@@ -13,7 +13,8 @@ class W_Function(W_Root):
     def setup(self, space):
         self.bytecode.setup(space)
 
-    def call(self, space, interpreter, args_w):
+    def call(self, space, interpreter, args_w, namedargs_w):
+        # XXX namedargs
         frame = Frame(self.bytecode, self.name)
         exp = len(self.bytecode.arglist)
         if exp != len(args_w):
@@ -36,7 +37,8 @@ class W_BuiltinFunction(W_Root):
     def setup(self, space):
         pass
 
-    def call(self, space, interpreter, args_w):
+    def call(self, space, interpreter, args_w, namedargs_w):
+        # XXX namedargs
         if self.num_args != -1 and self.num_args != len(args_w):
             msg = "Function %s got %d arguments, expected %d" % (self.name,
                 len(args_w), self.num_args)
@@ -68,5 +70,5 @@ class W_BoundMethod(W_Root):
         self.w_self = w_self
         self.w_function = w_function
 
-    def call(self, space, interpreter, args_w):
-        return space.call(self.w_function, [self.w_self] + args_w)
+    def call(self, space, interpreter, args_w, namedargs_w):
+        return space.call(self.w_function, [self.w_self] + args_w, namedargs_w)
