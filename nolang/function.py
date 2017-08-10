@@ -26,7 +26,7 @@ class W_Function(W_Root):
         valdict = {}
         for i in range(num_args):
             valdict[arglist[i].name] = None
-        for i in range(min([len(args_w), num_args])):
+        for i in range(min(len(args_w), num_args)):
             valdict[arglist[i].name] = args_w[i]
         for i in range(len(namedargs_w)):
             name, val = namedargs_w[i]

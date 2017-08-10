@@ -94,6 +94,17 @@ class TestFunctions(BaseTest):
             }
         ''', "Function foo got 3 arguments, expected 2")
 
+    def test_unexpected_keyword(self):
+        self.assert_argerror('''
+            def foo(a, b) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(1, c=2)
+            }
+        ''', "Function foo got unexpected keyword argument 'c'")
+
     def test_duplicate_args(self):
         self.assert_argerror('''
             def foo(a, b) {
