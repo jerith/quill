@@ -135,3 +135,26 @@ class TestFunctions(BaseTest):
                 return foo(a=10, 3)
             }
         ''')
+
+    def test_default_args(self):
+        w_res = self.interpret('''
+            def foo(a, b=1) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(2, 3)
+            }
+        ''')
+        assert self.space.int_w(w_res) == 23
+
+        w_res = self.interpret('''
+            def foo(a, b=1) {
+                return a * 10 + b
+            }
+
+            def main() {
+                return foo(2)
+            }
+        ''')
+        assert self.space.int_w(w_res) == 21

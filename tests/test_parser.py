@@ -236,8 +236,22 @@ class TestFullProgram(BaseTest):
             }
             ''')
         expected = ast.Program([
-            ast.Function('foo', [ast.Var('a0', ast.NoTypeDecl()),
-                                 ast.Var('a1', ast.NoTypeDecl())], [
+            ast.Function('foo', [
+                ast.Arg('a0', ast.NoTypeDecl(), None),
+                ast.Arg('a1', ast.NoTypeDecl(), None)], [
+            ], lineno=1)
+        ])
+        assert r == expected
+
+    def test_function_declaration_arg_defaults(self):
+        r = self.parse('''
+            def foo(a0, a1=1) {
+            }
+            ''')
+        expected = ast.Program([
+            ast.Function('foo', [
+                ast.Arg('a0', ast.NoTypeDecl(), None),
+                ast.Arg('a1', ast.NoTypeDecl(), ast.Number(1))], [
             ], lineno=1)
         ])
         assert r == expected

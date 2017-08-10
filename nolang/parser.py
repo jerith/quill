@@ -123,7 +123,7 @@ def get_parser():
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
         lineno = p[0].getsourcepos().lineno
-        return ast.Function(p[1].getstr(), p[2].get_vars(),
+        return ast.Function(p[1].getstr(), p[2].get_args(),
                             p[4].get_element_list(), lineno, srcpos=sr(p))
 
     @pg.production('function_body :')
@@ -159,6 +159,25 @@ def get_parser():
     @pg.production('var_decl : COMMA IDENTIFIER type_decl var_decl')
     def var_decl_identifier(state, p):
         return ast.VarDeclPartial(p[1].getstr(), p[2], p[3], srcpos=sr(p))
+
+    @pg.production('arg_decl : ')
+    def arg_decl_empty(state, p):
+        return ast.ArgsPartial([])
+
+    @pg.production('arg_decl : COMMA IDENTIFIER type_decl arg_decl')
+    def arg_decl_identifier(state, p):
+        arg = ast.Arg(p[1].getstr(), p[2], None, srcpos=sr([p[1], p[2]]))
+        return ast.ArgsPartial([arg] + p[3].get_args())
+
+    @pg.production('arg_decl : COMMA IDENTIFIER ASSIGN arg_default type_decl arg_decl')
+    def arg_decl_default(state, p):
+        arg = ast.Arg(p[1].getstr(), p[4], p[3], srcpos=sr([p[1], p[4]]))
+        return ast.ArgsPartial([arg] + p[5].get_args())
+
+    @pg.production('arg_default : INTEGER')
+    def arg_default_integer(state, p):
+        # XXX Add more kinds of default arg.
+        return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
     @pg.production('type_decl : ')
     def type_decl_empty(state, p):
@@ -258,10 +277,15 @@ def get_parser():
     def arglist(state, p):
         return ast.ArgList([], srcpos=sr(p))
 
-    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl var_decl RIGHT_PAREN')
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl arg_decl RIGHT_PAREN')
     def arglist_non_empty(state, p):
-        vars = [ast.Var(p[1].getstr(), p[2], p[1].getsrcpos())] + p[3].get_vars()
-        return ast.ArgList(vars, srcpos=sr(p))
+        arg = ast.Arg(p[1].getstr(), p[2], None, srcpos=sr([p[1], p[2]]))
+        return ast.ArgList([arg] + p[3].get_args(), srcpos=sr(p))
+
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER ASSIGN arg_default type_decl arg_decl RIGHT_PAREN')
+    def arglist_non_empty_default(state, p):
+        arg = ast.Arg(p[1].getstr(), p[4], p[3], srcpos=sr([p[1], p[4]]))
+        return ast.ArgList([arg] + p[5].get_args(), srcpos=sr(p))
 
     @pg.production('expression : INTEGER')
     def expression_number(state, p):

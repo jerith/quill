@@ -68,6 +68,11 @@ class Number(AstNode):
         AstNode.__init__(self, srcpos)
         self.value = value
 
+    def getintvalue(self):
+        # XXX Temporary hack to get an int value out of this when using it as a
+        # default value.
+        return self.value
+
     def compile(self, state):
         no = state.add_int_constant(self.value)
         state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
@@ -479,12 +484,31 @@ class Setitem(AstNode):
         state.emit(self.rhand.getendidx(), opcodes.SETITEM)
 
 
+class Arg(AstNode):
+    def __init__(self, name, tp, default, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.name = name
+        self.tp = tp
+        self.default = default
+
+    def compile(self, state):
+        raise NotImplementedError("XXX")
+
+
+class ArgsPartial(AstNode):
+    def __init__(self, args):
+        self.args = args
+
+    def get_args(self):
+        return self.args
+
+
 class ArgList(AstNode):
     def __init__(self, arglist, srcpos):
         AstNode.__init__(self, srcpos)
         self.arglist = arglist
 
-    def get_vars(self):
+    def get_args(self):
         return self.arglist
 
 

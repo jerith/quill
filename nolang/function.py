@@ -25,7 +25,13 @@ class W_Function(W_Root):
                     self.name, len(args_w) + len(namedargs_w), num_args))
         valdict = {}
         for i in range(num_args):
-            valdict[arglist[i].name] = None
+            name = arglist[i].name
+            valdict[name] = None
+            # XXX Temporary hack to get an int value (the only type of default
+            # we support for now) out of the raw uncompiled AST object we have
+            # here.
+            if arglist[i].default is not None:
+                valdict[name] = space.newint(arglist[i].default.getintvalue())
         for i in range(min(len(args_w), num_args)):
             valdict[arglist[i].name] = args_w[i]
         for i in range(len(namedargs_w)):
