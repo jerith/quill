@@ -44,7 +44,7 @@ def get_parser():
     pg = rply.ParserGenerator(TOKENS, precedence=[
         ('left', ['AND']),
         ('left', ['OR']),
-        ('left', ['EQ', 'LT', 'IN']),
+        ('left', ['EQ', 'LT', 'GT', 'IN', 'NE']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['TRUEDIV', 'STAR']),
         ('left', ['DOT']),
@@ -291,18 +291,19 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
-    @pg.production('expression : ST_STRING interpstr ST_ENDSTRING')
+    @pg.production('expression : ST_DQ_STRING stringcontent ST_ENDSTRING')
+    @pg.production('expression : ST_SQ_STRING stringcontent ST_ENDSTRING')
+    @pg.production('expression : ST_RAW_DQ_STRING rawstringcontent ST_ENDRAW')
+    @pg.production('expression : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
     def expression_string(state, p):
-        strings = p[1].get_strings()
-        if len(strings) == 1:
-            return ast.String(strings[0], srcpos=sr(p))
-        return ast.InterpString(strings, p[1].get_exprs(), srcpos=sr(p))
-
-    @pg.production('expression : ST_RAW rawstringcontent ST_ENDRAW')
-    def expression_rawstring(state, p):
         val = ''.join(p[1].get_strparts())
         str_decode_utf_8(val, len(val), 'strict', final=True)
         return ast.String(val, srcpos=sr(p))
+
+    @pg.production('expression : ST_INTERP_STRING interpstr ST_ENDSTRING')
+    def expression_interpstring(state, p):
+        strings = p[1].get_strings()
+        return ast.InterpString(strings, p[1].get_exprs(), srcpos=sr(p))
 
     @pg.production('expression : atom')
     def expression_atom(state, p):
@@ -335,7 +336,7 @@ def get_parser():
 
     @pg.production('stringcontent : stringcontent ESC_QUOTE')
     def string_esc_quote(state, p):
-        return ast.StringContent(p[0].get_strparts() + ['"'])
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()[1]])
 
     @pg.production('stringcontent : stringcontent ESC_ESC')
     def string_esc_esc(state, p):
@@ -427,8 +428,10 @@ def get_parser():
     @pg.production('expression : expression STAR expression')
     @pg.production('expression : expression TRUEDIV expression')
     @pg.production('expression : expression LT expression')
+    @pg.production('expression : expression GT expression')
     @pg.production('expression : expression EQ expression')
     @pg.production('expression : expression IN expression')
+    @pg.production('expression : expression NE expression')
     def expression_binop_expression(state, p):
         return ast.BinOp(p[1].getstr(), p[0], p[2], sr([p[1]]), srcpos=sr(p))
 
