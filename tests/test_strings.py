@@ -4,6 +4,9 @@ from support import BaseTest
 
 
 class TestStrings(BaseTest):
+    def interpret_str(self, expr):
+        return self.space.utf8_w(self.interpret_expr('return ' + expr))
+
     def test_string_literal(self):
         w_res = self.interpret_expr('return "foo";')
         assert self.space.utf8_w(w_res) == "foo"
@@ -15,6 +18,12 @@ class TestStrings(BaseTest):
     def test_string_equality(self):
         assert self.interpret_expr('return "foo" == "foo";') is self.space.w_True
         assert self.interpret_expr('return "foo" == "bar";') is self.space.w_False
+
+    def test_join(self):
+        assert self.interpret_str('"-".join([])') == ""
+        assert self.interpret_str('"-".join(["a"])') == "a"
+        assert self.interpret_str('"-".join(["a", "b", "c"])') == "a-b-c"
+        assert self.interpret_str('"".join(["a", "b", "c"])') == "abc"
 
 
 class TestInterpolatedStrings(BaseTest):

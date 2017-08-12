@@ -267,20 +267,6 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
-    @pg.production('expression : ST_DQ_STRING stringcontent ST_ENDSTRING')
-    @pg.production('expression : ST_SQ_STRING stringcontent ST_ENDSTRING')
-    @pg.production('expression : ST_RAW_DQ_STRING rawstringcontent ST_ENDRAW')
-    @pg.production('expression : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
-    def expression_string(state, p):
-        val = ''.join(p[1].get_strparts())
-        str_decode_utf_8(val, len(val), 'strict', final=True)
-        return ast.String(val, srcpos=sr(p))
-
-    @pg.production('expression : ST_INTERP_STRING interpstr ST_ENDSTRING')
-    def expression_interpstring(state, p):
-        strings = p[1].get_strings()
-        return ast.InterpString(strings, p[1].get_exprs(), srcpos=sr(p))
-
     @pg.production('expression : atom')
     def expression_atom(state, p):
         return p[0]
@@ -399,6 +385,20 @@ def get_parser():
     @pg.production('atom : atom LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET')
     def atom_getitem(state, p):
         return ast.Getitem(p[0], p[2], srcpos=sr(p))
+
+    @pg.production('atom : ST_DQ_STRING stringcontent ST_ENDSTRING')
+    @pg.production('atom : ST_SQ_STRING stringcontent ST_ENDSTRING')
+    @pg.production('atom : ST_RAW_DQ_STRING rawstringcontent ST_ENDRAW')
+    @pg.production('atom : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
+    def atom_string(state, p):
+        val = ''.join(p[1].get_strparts())
+        str_decode_utf_8(val, len(val), 'strict', final=True)
+        return ast.String(val, srcpos=sr(p))
+
+    @pg.production('atom : ST_INTERP_STRING interpstr ST_ENDSTRING')
+    def atom_interpstring(state, p):
+        strings = p[1].get_strings()
+        return ast.InterpString(strings, p[1].get_exprs(), srcpos=sr(p))
 
     @pg.production('expression : expression PLUS expression')
     @pg.production('expression : expression MINUS expression')
